@@ -9,14 +9,18 @@ user_name = input()
 print("Password:")
 pw = input()
 
+
+
 #1.用户标签表
 
 #先构建好整个表格
 Tags_List = list()	#存储标签列表
+Tags_List = ['咸','甜','苦','辣']		#example,remained to be changed
 Food_List = list()
 #两者均要为string
 
-db = pymysql.connect(host = 'localhost',user = 'mozart',password = 'mozewei19980206',db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'mozart'@'localhost' identified by 'mozewei19980206';
+
+db = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'mozart'@'localhost' identified by 'mozewei19980206';
 
 
 cursor_1 = db.cursor()	#cursor作为数据库操作单位

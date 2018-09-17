@@ -41,7 +41,12 @@ class RSystem:
 		for user_id in self.User_ID_List:
 			self.User_Fav_Food_List[user_id] = set()
 
+	def Insert_NewFoodID(self,food_id):
+		self.Food_ID_List.append(food_id)
 
+	def Insert_NewUserID(self,user_id):
+		self.User_ID_List.append(user_id)
+		
 	def Up_Tags_Weight(self,user_id,Fav_Food_ID):	#将特定用户喜欢的食物所具有的标签在UT表格中进行权重增加
 		#权重增加百分比依据该用户对其有过行为的食物的数量，当该用户吃过更多食物的时候（评分行为越多），该行为对其的影响越小
 		DB_conn = pymysql.connect(host = 'localhost',user  = user_name,password = pw,db ='db', charset = 'utf8mb4', cursorclass = pymysql.cursors.DictCursor)
@@ -180,7 +185,8 @@ class RSystem:
 						part_result += User_Tags[user_i][self.RS_Tags_List[i]] * User_Tags[user_j][self.RS_Tags_List[i]]
 					self.UserCF_Matrix[user_i][user_j] = part_result/(len_vi * len_vj)	
 		DB_conn.close()
-    
+
+
     #推荐算法中用USerCF来线下计算并定时提供好推荐列表，再用ItemCF来进行当用户收藏了食物之后的实时计算
 
 	def Renew_Food_Rank_List(self):
@@ -190,19 +196,22 @@ class RSystem:
 		self.Food_AveScore = dict(temp)
 		print(temp)
 
-	def Recommand(self,user_id):    #根据用户ID返回其推荐列表
+	def Recommand(self,user_id):    #根据用户ID返回其推荐列表		
         #先根据用户相似度抽取相似度高的用户收藏的食物用于推荐
-		UserCF_Recommand_List = list() 
-		Top_Sim_User_List = sorted(self.UserCF_Matrix[user_id],key = lambda item:item[1],reverse = True)		#结果为['34221', '13342']	
-        #删掉top_list中用户自身
-		Top_Sim_User_List.remove(user_id)	
+		UserCF_Recommand_List = list()
+		if user_id in self.UserCF_Matrix: 
+			Top_Sim_User_List = sorted(self.UserCF_Matrix[user_id],key = lambda item:item[1],reverse = True)		#结果为['34221', '13342']	
+        	#删掉top_list中用户自身
+			Top_Sim_User_List.remove(user_id)	
 
-		for top_sim_user in Top_Sim_User_List:
-			for food in self.User_Fav_Food_List[top_sim_user]:
-				if food not in UserCF_Recommand_List:
-					UserCF_Recommand_List.append(food)
-				else :
-					continue
+			for top_sim_user in Top_Sim_User_List:
+				for food in self.User_Fav_Food_List[top_sim_user]:
+					if food not in UserCF_Recommand_List:
+						UserCF_Recommand_List.append(food)
+					else :
+						continue
+
+
 
         #再根据物品相似度进行实时推荐
 		Sim_Items_List = list() 

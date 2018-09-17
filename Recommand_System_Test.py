@@ -185,10 +185,13 @@ class RSystem:
 						part_result += User_Tags[user_i][self.RS_Tags_List[i]] * User_Tags[user_j][self.RS_Tags_List[i]]
 					self.UserCF_Matrix[user_i][user_j] = part_result/(len_vi * len_vj)	
 		DB_conn.close()
-    '''
+'''
 	def Feature_Connection_Mining(self):
-			#根据用户的点餐
-	'''
+		#根据用户的喜爱食物对其进行关联搜索，对每个用户的喜欢模式找出最频繁项
+'''
+
+
+	
 
     #推荐算法中用USerCF来线下计算并定时提供好推荐列表，再用ItemCF来进行当用户收藏了食物之后的实时计算
 
