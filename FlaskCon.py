@@ -35,7 +35,6 @@ app = Flask(__name__)
 
 @app.route('/v1/backend/food/sync/user/add',methods = ['POST'])		#/http://lcoalhost:8080/v1/backend/food/sync/user/add
 def Receive_new_User():			#获得新注册的用户的信息并添加
-	print('1')
 	a = request.get_data() 
 	dict1 = json.loads(a)
 	json_data = {'error':0}
@@ -61,7 +60,6 @@ def Receive_new_User():			#获得新注册的用户的信息并添加
 
 @app.route('/v1/backend/food/sync/user/edit-tag',methods = ['POST'])		
 def Edit_Tag():	#将用户新增加的标签加入到数据库中
-	print('2')
 	a = request.get_data()
 	dict2 = json.loads(a)
 	user_id = dict2['id']
@@ -82,7 +80,6 @@ def Edit_Tag():	#将用户新增加的标签加入到数据库中
 
 @app.route('/v1/backend/food/sync/user/add-favorite',methods = ['POST'])			#address needed 
 def Favourite_Food():	#将用户新增加的喜爱食物加入到数据库中
-	print('3')
 	a = request.get_data()
 	dict3 = json.loads(a)
 	user_id = dict3['id']
@@ -102,7 +99,6 @@ def Favourite_Food():	#将用户新增加的喜爱食物加入到数据库中
 
 @app.route('/v1/backend/food/sync/user/delelte-favorite',methods = ['POST'])
 def Delete_Fav_Food():
-	print('4')
 	a = request.get_data()
 	dict4 = json.loads(a)
 	user_id = dict4['id']
@@ -121,7 +117,6 @@ def Delete_Fav_Food():
 
 @app.route('/v1/backend/food/sync/user/add-comment',methods = ['POST'])		
 def Added_Comment_Annalysic():
-	print('5')
 	DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 	a = request.get_data()
 	dict5 = json.loads(a)
@@ -195,7 +190,6 @@ def Added_Comment_Annalysic():
 
 @app.route('/v1/backend/food/sync/user/delete-comment',methods = ['POST'])
 def Delete_Comment():
-	print('6')
 	DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 	a = request.get_data()
 	dict7 = json.loads(a)
@@ -266,7 +260,6 @@ def Delete_Comment():
 
 @app.route('/v1/backend/food/recommend/id',methods = ['POST'])	
 def Return_Recommand_Foods():
-	print('7')
 	DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 	DB_conn.close()
 	a = request.get_data()
