@@ -286,7 +286,7 @@ def Run_Server():
 if __name__ == '__main__':
 
 	
-	os.system("C:\\Users\\msi\\mozart\\Init_SQL.py")
+	os.system("Init_SQL.py")	#同个目录下的文件
 	t1 = threading.Thread(target = Cal_M)
 	t2 = threading.Thread(target = Run_Server)
 	t1.start()
