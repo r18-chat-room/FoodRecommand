@@ -2,6 +2,8 @@
 
 from flask import Flask 
 import pymysql 
+import requests
+import json
 
 #初始化三个表格且值均为0：1.用户标签表   2.食物标签表    3.用户食物评分表    
 print("User_Name:")
@@ -15,14 +17,21 @@ pw = input()
 
 #先构建好整个表格
 
-#标签要从那个接口获取并在此初始化
-Tags_List = list()	#存储标签列表
-Tags_List = ['咸','甜','苦','辣']		
-
+#标签要从那个接口获取并在此初始化 
+Tags_List = list()	#存储标签列表	
 Food_List = list()
 #两者均要为string
 
+url = '/v1/internel/food/get-all-info'		#remains doubts
+req = requests.get(url)
+all_info = req.json()
+all_food_info = all_info['foods']
 
+for each_info in all_food_info:
+	Food_List.append(each_info['id'])		#remained to change
+
+############################################ under is the code needed to be disabled after first usage #############################	
+	
 db = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'mozart'@'localhost' identified by 'mozewei19980206';
 
 
@@ -65,7 +74,7 @@ for i in range(1,len(Tags_List)):
 
 	cursor_4.execute(Action_2)
 	db.commit()
-cursor_4.close() 	
+cursor_4.close()
 
 
 #3.用户食物分数表
@@ -126,4 +135,11 @@ cursor_9.execute("""Create Table Comment_Info(
 db.commit()
 cursor_9.close()
 
-#给那个接口发送请求并获得所有食物信息，将其添加进去。
+
+#######################  above is the code needed to be disabled after first usage ###################################
+
+# put all initial food info in the table includng the comment 			 
+			 
+			 
+			 
+			 
