@@ -14,8 +14,11 @@ pw = input()
 #1.用户标签表
 
 #先构建好整个表格
+
+#标签要从那个接口获取并在此初始化
 Tags_List = list()	#存储标签列表
-Tags_List = ['咸','甜','苦','辣']		#example,remained to be changed
+Tags_List = ['咸','甜','苦','辣']		
+
 Food_List = list()
 #两者均要为string
 
@@ -111,3 +114,4 @@ cursor_8.execute("""Create Table User_FavFood(
 db.commit()
 cursor_8.close()
 
+#给那个接口发送请求并获得所有食物信息，将其添加进去。
