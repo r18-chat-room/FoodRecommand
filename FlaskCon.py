@@ -129,6 +129,13 @@ def Added_Comment_Annalysic():
 	Comment_ID = dict5['CommentId']
 	Return_Tags_List = list()
 
+	#put the info into the table Comment_Info
+	add_comment_cursor = DB_conn.cursor()
+	operation_sentence = "Insert INTO Comment_Info(Comment_ID,Context,User_ID,Score，Food_ID) values(%s,%s,%s,%s,%s)" %(Comment_ID,Comment,User_ID,Score,Comment_Food)
+	add_comment_cursor.execute(operation_sentence)
+	DB_conn.commit()
+	add_comment_cursor.close()
+	
 	#修改用户评论次数表
 	Change_User_CT_cursor = DB_conn.cursor() 
 	Change_User_CT_cursor.execute("update User_CT set Comment_Times = Comment_Times + 1 where User_ID = %s" %User_ID)
@@ -194,12 +201,25 @@ def Delete_Comment():
 	a = request.get_data()
 	dict7 = json.loads(a)
 	User_ID = dict7['id']
-	Comment_Food = dict7['food']
-	Score = dict7['rate']
-	Comment = dict7['detail']
 	Comment_ID = dict7['CommentId']
 	Return_Tags_List = list()
-
+	
+	#score comment food_id are needed to get in db 
+	get_comment_info = DB_conn.cursor()
+	get_info_sentence = 'select Context,Score,Food_ID from Comment_Info where Comm_ID = %s'%(Comment_ID)
+	get_comment_info.execute(get_info_sentence)
+	info = get_comment_info.fetchone()
+	Comment = info['Context']
+	Score = info['Score']
+	Food_ID = info['Food_ID']
+	get_comment_info.close()
+	
+	#delete the comment_info in table Comment_Info
+	del_comment_cursor = DB_conn.cursor()
+	del_comment_cursor.execute('delete from Comment_Info where Comm_ID = %s'%(Comment_ID))
+	DB_conn.commit()
+	del_comment_cursor.close()
+	
 	Change_User_CT_cursor = DB_conn.cursor() 
 	Change_User_CT_cursor.execute("update User_CT set Comment_Times = Comment_Times - 1 where User_ID = %s" %User_ID)
 	DB_conn.commit() 
