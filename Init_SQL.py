@@ -114,4 +114,16 @@ cursor_8.execute("""Create Table User_FavFood(
 db.commit()
 cursor_8.close()
 
+#创建评论信息表
+cursor_9 = db.cursor()
+cursor_9.execute("""Create Table Comment_Info(
+				Comm_ID varchar(50) NOT NULL primary key,
+				Context varchar(500) NOT NULL,
+				User_ID varchar(20) NOT NULL,
+				Score double(5,2) NOT NULL,
+				Food_ID varchar(20) NOT NULL
+				)""")
+db.commit()
+cursor_9.close()
+
 #给那个接口发送请求并获得所有食物信息，将其添加进去。
