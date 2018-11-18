@@ -63,7 +63,7 @@ def Edit_Tag():	#将用户新增加的标签加入到数据库中
 	a = request.get_data()
 	dict2 = json.loads(a)
 	user_id = dict2['id']
-	tags_list = dict2['tags']
+	tags_list = [x['name'] for x in dict2['tags']]
 	DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 	#将用户有所行动的标签添加进其向量中
 	for tag in tags_list :
