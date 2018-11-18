@@ -31,7 +31,7 @@ d = {"count":10000}
 req = requests.post(tag_url,data = d)
 tag_list = req.json()['tags']
 for i in range(len(tag_list)):
-	Tag_List.append(tag_list['name'])
+	Tag_List.append(tag_list[i]['name'])
 
 ############################################ under is the code needed to be disabled after first usage #############################	
 	
@@ -143,31 +143,74 @@ cursor_9.close()
 # put all initial food info in the table includng the comment 			 
 #分函数处理各个信息插入不同表中的行为
 def insert_into_FTs(info):	#info includes 	[{'food_id':..., 'tags':[{'name':...},...]},{...},]	 
-			 
+	Init_FT_cursor = db.cursor()
+	for i in info:
+		sql_action = 'insert into FTs(Food_ID) values(%s)' %i['food_id']
+		Init_FT_cursor.execute(sql_action)
+	db.commit()
+	for i in info:
+		for tag in [x['name'] for x in i['tags']]:
+			sql_action = 'update FTs set %s = 3 where Food_ID = %s'%(tag,i['food_id'])
+			Init_FT_cursor.execute(sql_action)
+	db.commit()
+	Init_FT_cursor.close()
 
 def insert_into_Comment_Info(info):    #info includes [{'food_id‘:, 'rate':, 'tags':[],'detail':[],'user_id':,}]
-		
-
-def insert_into_F_Aves(info):   #info is [{'food_id':,'rate':},...]
+	CI_cursor = db.cursor()
+	for comment in info:
+		sql_action = 'insert into Comment_Info(Comm_ID,Context,User_ID,Score,Food_ID) values(%s,%s,%s,%s,%s)'%(comment['comment_id'],comment['detail'],comment['user_id'],comment['rate'],comment['food_id'])
+		CI_cursor.execute(sql_action)
+	db.commit()
 	
+def insert_into_F_Aves(info):   #info is [{'food_id':,'rate':,'time':},...]
+	FA_cursor = db.cursor()
+	for fs in info:
+		sql_action = 'insert into F_AveS(Food_ID,Ave_Score,times) values(%s,%s,%s)'%(fs['food_id'],fs['rate'],fs['time'])
+		FA_cursor.execute(sql_action)
+	db.commit()
 	
 def insert_into_User_CT(info):   #info is [{'user_id':,'comm_times':},...]
-	
+	UCT_cursor = db.cursor()
+	for uct in info:
+		sql_action = f"insert into User_CT(User_ID,Comment_Times) values({uct['user_id']},{uct['comm_times']})"
+		UCT_cursor.execute(sql_action)
+	db.commit()
 
 def insert_into_UFS_0(info):    #info is [{'user_id':,'food_id':,'rate':}]
-		
+	UFS_cursor = db.cursor()
+	for ufs in info:
+		sql_action = f"insert into UFS_0(User_ID,Food_ID,Score) values({ufs['user_id']},{ufs['food_id']},{ufs['rate']})"
+		UFS_cursor.execute(sql_action)
+	db.commit()
 		
 #roll over all_info dict and store data	
+all_food_tags = []	
+all_comment_info = []
+all_food_score = []
+all_user_ct = []
+all_user_foodscore = []
+for food_info in all_food_info:
+	all_food_tags.append({'food_id':food_info['id'],'tags':[x['name'] for x in food_info['tags']]})
+	for comment in food_info['comment']:
+		all_comment_info.append({'comment_id':comment['comment_id'],'food_id':food_info['id'],'rate':comment['rate'],'tags':comment['tags'],'detail':comment['detail'],'user_id':comment['user_id']})
 		
+		if len(all_user_ct) == 0:
+			all_user_ct.append({'user_id':comment['user_id'],'comm_times':1})
+		else:
+			if comment['user_id'] in [x['user_id'] for x in all_user_ct]:
+				all_user_ct['comm_times'] += 1
+			else:
+				all_user_ct.append({'user_id':comment['user_id'],'comm_times':1})
 		
+		all_user_foodscore.append({'user_id':comment['user_id'],'rate':comment['rate'],'food_id':comment['food_id']})
+			
+	all_food_score.append({'food_id':food_info['id'],'rate':food_info['rate'],'time':len(food_info['comment'])})
 		
-		
-		
-		
-		
-		
-		
-		
+insert_into_FTs(all_food_tags)		
+insert_into_Comment_Info(all_comment_info)		
+insert_into_F_Aves(all_food_score)		
+insert_into_User_CT(all_user_ct)
+insert_into_UFS_0(all_user_foodscore)		
 		
 		
 		
