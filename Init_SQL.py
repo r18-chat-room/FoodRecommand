@@ -18,20 +18,20 @@ Tags_List = list()	#存储标签列表
 Food_List = list()
 #两者均要为string
 
-url = '/v1/internel/food/get-all-info'		
+url = 'https://gd.delbertbeta.cc/v1/internel/food/get-all-info'		
 req = requests.get(url)
 all_info = req.json()
-all_food_info = all_info['foods']
+all_food_info = all_info
 
 for each_info in all_food_info:
-	Food_List.append(each_info['id'])		
+	Food_List.append(each_info['_id'])		
 
-tag_url = '/v1/app/food/tag/random'
-d = {"count":10000}
-req = requests.post(tag_url,data = d)
-tag_list = req.json()['tags']
+tag_url = 'https://gd.delbertbeta.cc/v1/app/food/tag/random'
+d = {"count": 20}
+req = requests.post(tag_url,json = d)
+tag_list = req.json()
 for i in range(len(tag_list)):
-	Tag_List.append(tag_list[i]['name'])
+	Tags_List.append(tag_list[i]['name'])
 
 ############################################ under is the code needed to be disabled after first usage #############################	
 	
@@ -43,7 +43,7 @@ db = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db'
 cursor_1 = db.cursor()	#cursor作为数据库操作单位
 
 DataL_Init_1 = """Create Table UTs(		
-	User_ID  varChar(20)  NOT NULL primary key,
+	User_ID  varChar(30)  NOT NULL primary key,
 	%s    double(5,2) null default 0	
 	)"""%(Tags_List[0])		#创建表格关于用户及其标签。
 cursor_1.execute(DataL_Init_1)
@@ -64,7 +64,7 @@ cursor_2.close()
 cursor_3 = db.cursor()
 
 DataL_Init_2 = """Create Table FTs(
-				Food_ID  varChar(20)  NOT NULL primary key,
+				Food_ID  varChar(30)  NOT NULL primary key,
 				%s  	 double(5,2)   NULL default 0
 				)"""	%(Tags_List[0])
 cursor_3.execute(DataL_Init_2)
@@ -86,8 +86,8 @@ cursor_4.close()
 
 cursor_5 = db.cursor() 
 DataL_Init_3 = """Create Table UFS_0(
-				  User_ID	varChar(20)  NOT NULL,
-				  Food_ID   varChar(20)  NOT NULL,
+				  User_ID	varChar(30)  NOT NULL,
+				  Food_ID   varChar(30)  NOT NULL,
 				  Score		varChar(20)	 NULL
 				 )"""
 
@@ -100,7 +100,7 @@ cursor_5.close()
 cursor_6 = db.cursor()
 
 DataL_Init_4 = """Create Table F_AveS(
-				Food_ID  varChar(20) NOT NULL primary key,
+				Food_ID  varChar(30) NOT NULL primary key,
 				Ave_Score	double(5,2) NULL default 0,
 				times	INT(4)  NULL default 0
 				)"""
@@ -112,7 +112,7 @@ cursor_6.close()
 #创建用户评论次数表		User_CT
 cursor_7 = db.cursor() 
 cursor_7.execute("""Create Table User_CT(
-				User_ID varChar(20) NOT NULL primary key,
+				User_ID varChar(30) NOT NULL primary key,
 				Comment_Times int(4) NULL default 0
 				)""")
 db.commit() 
@@ -122,8 +122,8 @@ cursor_7.close()
 
 cursor_8 = db.cursor()
 cursor_8.execute("""Create Table User_FavFood(
-				User_ID varChar(20) NOT NULL,
-				Fav_Food varChar(20) NOT NULL
+				User_ID varChar(30) NOT NULL,
+				Fav_Food varChar(30) NOT NULL
 				)""")
 db.commit()
 cursor_8.close()
@@ -133,9 +133,9 @@ cursor_9 = db.cursor()
 cursor_9.execute("""Create Table Comment_Info(
 				Comm_ID varchar(50) NOT NULL primary key,
 				Context varchar(500) NOT NULL,
-				User_ID varchar(20) NOT NULL,
+				User_ID varchar(30) NOT NULL,
 				Score double(5,2) NOT NULL,
-				Food_ID varchar(20) NOT NULL
+				Food_ID varchar(30) NOT NULL
 				)""")
 db.commit()
 cursor_9.close()
@@ -149,7 +149,7 @@ def insert_into_FTs(info):	#info includes 	[{'food_id':..., 'tags':[{'name':...}
 		Init_FT_cursor.execute(sql_action)
 	db.commit()
 	for i in info:
-		for tag in [x['name'] for x in i['tags']]:
+		for tag in i['tags']:
 			sql_action = 'update FTs set %s = 3 where Food_ID = %s'%(tag,i['food_id'])
 			Init_FT_cursor.execute(sql_action)
 	db.commit()
@@ -161,6 +161,7 @@ def insert_into_Comment_Info(info):    #info includes [{'food_id‘:, 'rate':, '
 		sql_action = 'insert into Comment_Info(Comm_ID,Context,User_ID,Score,Food_ID) values(%s,%s,%s,%s,%s)'%(comment['comment_id'],comment['detail'],comment['user_id'],comment['rate'],comment['food_id'])
 		CI_cursor.execute(sql_action)
 	db.commit()
+	CI_cursor.close()
 	
 def insert_into_F_Aves(info):   #info is [{'food_id':,'rate':,'time':},...]
 	FA_cursor = db.cursor()
@@ -175,6 +176,7 @@ def insert_into_User_CT(info):   #info is [{'user_id':,'comm_times':},...]
 		sql_action = f"insert into User_CT(User_ID,Comment_Times) values({uct['user_id']},{uct['comm_times']})"
 		UCT_cursor.execute(sql_action)
 	db.commit()
+	UCT_cursor.close()
 
 def insert_into_UFS_0(info):    #info is [{'user_id':,'food_id':,'rate':}]
 	UFS_cursor = db.cursor()
@@ -182,6 +184,7 @@ def insert_into_UFS_0(info):    #info is [{'user_id':,'food_id':,'rate':}]
 		sql_action = f"insert into UFS_0(User_ID,Food_ID,Score) values({ufs['user_id']},{ufs['food_id']},{ufs['rate']})"
 		UFS_cursor.execute(sql_action)
 	db.commit()
+	UFS_cursor.close()
 		
 #roll over all_info dict and store data	
 all_food_tags = []	
@@ -190,21 +193,21 @@ all_food_score = []
 all_user_ct = []
 all_user_foodscore = []
 for food_info in all_food_info:
-	all_food_tags.append({'food_id':food_info['id'],'tags':[x['name'] for x in food_info['tags']]})
+	all_food_tags.append({'food_id':food_info['_id'],'tags':[x['name'] for x in food_info['tags']]})
 	for comment in food_info['comment']:
-		all_comment_info.append({'comment_id':comment['comment_id'],'food_id':food_info['id'],'rate':comment['rate'],'tags':comment['tags'],'detail':comment['detail'],'user_id':comment['user_id']})
+		all_comment_info.append({'comment_id':comment['_id'],'food_id':food_info['_id'],'rate':comment['rate'],'tags':[x['name'] for x in comment['tags']],'detail':comment['detail'],'user_id':comment['userId']})
 		
 		if len(all_user_ct) == 0:
-			all_user_ct.append({'user_id':comment['user_id'],'comm_times':1})
+			all_user_ct.append({'user_id':comment['userId'],'comm_times':1})
 		else:
-			if comment['user_id'] in [x['user_id'] for x in all_user_ct]:
-				all_user_ct['comm_times'] += 1
+			if comment['userId'] in [x['user_id'] for x in all_user_ct]:
+				all_user_ct[comment['userId']]['comm_times'] += 1
 			else:
-				all_user_ct.append({'user_id':comment['user_id'],'comm_times':1})
+				all_user_ct.append({'user_id':comment['userId'],'comm_times':1})
 		
-		all_user_foodscore.append({'user_id':comment['user_id'],'rate':comment['rate'],'food_id':comment['food_id']})
+		all_user_foodscore.append({'user_id':comment['userId'],'rate':comment['rate'],'food_id':comment['food']})
 			
-	all_food_score.append({'food_id':food_info['id'],'rate':food_info['rate'],'time':len(food_info['comment'])})
+	all_food_score.append({'food_id':food_info['_id'],'rate':food_info['rating'],'time':len(food_info['comment'])})
 		
 insert_into_FTs(all_food_tags)		
 insert_into_Comment_Info(all_comment_info)		
@@ -212,7 +215,7 @@ insert_into_F_Aves(all_food_score)
 insert_into_User_CT(all_user_ct)
 insert_into_UFS_0(all_user_foodscore)		
 		
-		
+db.close()		
 		
 			 
 #######################  above is the code needed to be disabled after first usage ###################################
