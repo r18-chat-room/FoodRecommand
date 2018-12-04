@@ -12,13 +12,17 @@ user_name = Init_SQL.user_name
 pw = Init_SQL.pw
 all_food_id_list = Init_SQL.Food_List
 
-#获取所有的食物ID
-all_user_id_list = [x['user_id'] for x in Init_SQL.all_user_ct]
+#获取所有的user_ID
+DB_conn =  pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
+get_all_user_id_cursor = DB_conn.cursor()
+get_all_user_id_cursor.execute('select User_ID from UTs')
+all_user_id_dictlist = get_all_user_id_cursor.fetchall()
+all_user_id_list = [x['User_ID'] for x in all_user_id_dictlist]
 
 class RSystem:
 	def __init__(self):
-		self.Food_ID_List  = []	#在使用前在此处初始化
-		self.User_ID_List = []
+		self.Food_ID_List = all_food_id_list	#在使用前在此处初始化
+		self.User_ID_List = all_user_id_list
 		self.UserCF_Matrix = dict() 
 		self.ItemCF_Matrix = dict()	
 		self.Food_AveScore = dict() 
@@ -29,7 +33,7 @@ class RSystem:
 			self.Food_AveScore[food_id]['AveScore'] = 0	#avescore
 			self.Food_AveScore[food_id]['Times'] = 0	#times
 
-		DB_conn =  pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
+		DB_conn =  pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		Get_F_AveS = DB_conn.cursor()
 		Get_F_AveS.execute("select * from F_AveS")
 		rows = Get_F_AveS.fetchall()
@@ -50,10 +54,11 @@ class RSystem:
 
 	def Insert_NewUserID(self,user_id):
 		self.User_ID_List.append(user_id)
+		self.User_Fav_Food_List[user_id] = set()
 		
 	def Up_Tags_Weight(self,user_id,Fav_Food_ID):	#将特定用户喜欢的食物所具有的标签在UT表格中进行权重增加
 		#权重增加百分比依据该用户对其有过行为的食物的数量，当该用户吃过更多食物的时候（评分行为越多），该行为对其的影响越小
-		DB_conn = pymysql.connect(host = 'localhost',user  = user_name,password = pw,db ='db', charset = 'utf8mb4', cursorclass = pymysql.cursors.DictCursor)
+		DB_conn = pymysql.connect(host = 'localhost',user  = user_name,password = pw,db ='gd', charset = 'utf8mb4', cursorclass = pymysql.cursors.DictCursor)
 		get_food_tags_cursor = DB_conn.cursor()
 		get_food_tags_cursor.execute('select * from FTs where Food_ID = \'%s\'' %Fav_Food_ID)
 
@@ -84,7 +89,7 @@ class RSystem:
     
     
 	def DOWN_Tags_Weight(self,user_id,Dislike_Food):
-		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db ='db', charset = 'utf8mb4', cursorclass = pymysql.cursors.DictCursor)
+		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db ='gd', charset = 'utf8mb4', cursorclass = pymysql.cursors.DictCursor)
 		get_food_tags_cursor = DB_conn.cursor()
         
 		Unlike_tag_set = set()
@@ -100,7 +105,7 @@ class RSystem:
         
 		for down_tag_index in Unlike_tag_set:
 			Down_User_Tags_Weight = DB_conn.cursor()
-			Down_User_Tags_Weight.execute(' update UTs set %s =  %s * 0.8 where User_ID = \'%s\'' %(tag,tag,user_id))
+			Down_User_Tags_Weight.execute(' update UTs set %s =  %s * 0.8 where User_ID = \'%s\'' %(down_tag_index,down_tag_index,user_id))
 			DB_conn.commit()
 			Down_User_Tags_Weight.close()
 		self.User_Fav_Food_List[user_id].remove(Dislike_Food)
@@ -109,7 +114,7 @@ class RSystem:
 	def Cal_ItemCF(self):    #计算物品相似度
     #Point: 如何给向量字典顺序加入物品各个标签的行为点数
 		Item_Tags = dict()
-		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
+		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
     	#生成各食物的标签向量
     	#（后面可以增加用标签占比来计算物品标签向量提高准确度）
 		for i in range(0,len(self.Food_ID_List)):
@@ -144,7 +149,7 @@ class RSystem:
 					len_vj = math.sqrt(len_vj)
 					for i in range(0,len(vector_i)):
 						part_result += Item_Tags[food_i][self.RS_Tags_List[i]] * Item_Tags[food_j][self.RS_Tags_List[i]]
-					self.ItemCF_Matrix[food_i][food_j] = part_result/(len_vi * len_vj)	
+					self.ItemCF_Matrix[food_i][food_j] = part_result/(len_vi * len_vj + 1)	
 		DB_conn.close()
 
     		
@@ -152,7 +157,7 @@ class RSystem:
 
 	def Cal_UserCF(self):    #计算用户相似度
     	#后期可采用皮尔逊相似度
-		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw, db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
+		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw, db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		User_Tags = dict() 
 
 		for i in range(0,len(self.User_ID_List)):
@@ -187,7 +192,7 @@ class RSystem:
 					part_result = 0
 					for i in range(0,len(self.RS_Tags_List)):
 						part_result += User_Tags[user_i][self.RS_Tags_List[i]] * User_Tags[user_j][self.RS_Tags_List[i]]
-					self.UserCF_Matrix[user_i][user_j] = part_result/(len_vi * len_vj)	
+					self.UserCF_Matrix[user_i][user_j] = part_result/(len_vi * len_vj +1)	
 		DB_conn.close()
 
 
@@ -220,15 +225,17 @@ class RSystem:
         #再根据物品相似度进行实时推荐
 		Sim_Items_List = list() 
 		Sim_Items_Set = set()
-		for Fav_Food_ID in self.User_Fav_Food_List[user_id]:
-			part_Sim_Items_List = sorted(self.ItemCF_Matrix[Fav_Food_ID],key = lambda item: item[1], reverse = True)
-			Sim_Items_List.extend(part_Sim_Items_List)
+		Sim_Items_Recommand_List = []
+		if len(self.User_Fav_Food_List[user_id]) != 0:
+			for Fav_Food_ID in self.User_Fav_Food_List[user_id]:
+				part_Sim_Items_List = sorted(self.ItemCF_Matrix[Fav_Food_ID],key = lambda item: item[1], reverse = True)
+				Sim_Items_List.extend(part_Sim_Items_List)
 
-		Sim_Items_Recommand_List = list(set(Sim_Items_List))
-		Sim_Items_Recommand_List.sort(key = Sim_Items_List.index)
+			Sim_Items_Recommand_List = list(set(Sim_Items_List))
+			Sim_Items_Recommand_List.sort(key = Sim_Items_List.index)
 
 		#然后再根据用户自身edit的标签来推荐 
-		DB_conn = pymysql.connect(host = 'localhost', user = user_name,password = pw, db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
+		DB_conn = pymysql.connect(host = 'localhost', user = user_name,password = pw, db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		get_User_tags_cursor = DB_conn.cursor() 
 		get_user_tags = " select * from UTs where User_ID = \'%s\'" %user_id
 		get_User_tags_cursor.execute(get_user_tags)
@@ -243,7 +250,7 @@ class RSystem:
 			if (value != 0):
 				counter += 1 
 				tag_value_sum += value 
-		mid_tag_value = tag_value_sum/counter
+		mid_tag_value = tag_value_sum/(counter+1)
 		#筛选出值得依据的标签 
 		EditedTags_RecommendList = list()
 		for tag,value in Tag_Rank_List:

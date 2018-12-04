@@ -37,7 +37,7 @@ app = Flask(__name__)
 def Receive_new_User():			#获得新注册的用户的信息并添加
 	try:
 		a = request.get_data() 
-		dict1 = json.loads(a)
+		dict1 = json.loads(a.decode('utf-8'))
 		json_data = {'error':0}
 		#进行对数据库增加一行的操作
 		user_id= dict1['id']
@@ -54,14 +54,14 @@ def Receive_new_User():			#获得新注册的用户的信息并添加
 		RS.User_Fav_Food_List[user_id] = set()
 		return jsonify(json_data)
 	except Exception as e:
-		json_data['error'] = e 
+		json_data = {'error':str(e)} 
 		return jsonify(json_data)
 
 @app.route('/v1/backend/food/sync/user/edit-tag',methods = ['POST'])		
 def Edit_Tag():	#将用户新增加的标签加入到数据库中
 	try:
 		a = request.get_data()
-		dict2 = json.loads(a)
+		dict2 = json.loads(a.decode('utf-8'))
 		user_id = dict2['id']
 
 		#这里可能要改回去  'name':'tag1'
@@ -81,14 +81,14 @@ def Edit_Tag():	#将用户新增加的标签加入到数据库中
 		json_data = {'error':0}
 		return jsonify(json_data)
 	except Exception as e:
-		json_data = {'error':e}
+		json_data = {'error':str(e)}
 		return jsonify(json_data)
 
 @app.route('/v1/backend/food/sync/user/add-favorite',methods = ['POST'])			#address needed 
 def Favourite_Food():	#将用户新增加的喜爱食物加入到数据库中
 	try:
 		a = request.get_data()
-		dict3 = json.loads(a)
+		dict3 = json.loads(a.decode('utf-8'))
 		user_id = dict3['id']
 		Fav_Food = dict3['food']
 	
@@ -100,10 +100,11 @@ def Favourite_Food():	#将用户新增加的喜爱食物加入到数据库中
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		W_cursor = DB_conn.cursor()
 		W_cursor.execute("Insert INTO User_FavFood(User_ID,Fav_Food) values(\'%s\',\'%s\')" %(user_id,Fav_Food))
+		DB_conn.commit()
 		json_data = {'error':0}
 		return jsonify(json_data)
 	except Exception as e:
-		json_data = {'error':e}
+		json_data = {'error':str(e)}
 		return jsonify(json_data)
 
 
@@ -111,22 +112,23 @@ def Favourite_Food():	#将用户新增加的喜爱食物加入到数据库中
 def Delete_Fav_Food():
 	try:
 		a = request.get_data()
-		dict4 = json.loads(a)
+		dict4 = json.loads(a.decode('utf-8'))
 		user_id = dict4['id']
 		Fav_Food = dict4['food']
 
 		#删除其增加的权重
 		RS.DOWN_Tags_Weight(user_id,Fav_Food)
-		RS.User_Fav_Food_List[user_id].remove(Fav_Food)
+		# RS.User_Fav_Food_List[user_id].remove(Fav_Food)
 
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		D_curosr = DB_conn.cursor()
 		D_curosr.execute("delete from User_FavFood where User_ID = \'%s\' and Fav_Food = \'%s\'" %(user_id,Fav_Food))
+		DB_conn.commit()
 		D_curosr.close()
 		json_data = {'error':0}
 		return jsonify(json_data)	
 	except Exception as e:
-		json_data = {'error':e}
+		json_data = {'error':str(e)}
 		return jsonify(json_data)	
 
 @app.route('/v1/backend/food/sync/user/add-comment',methods = ['POST'])		
@@ -134,19 +136,19 @@ def Added_Comment_Annalysic():
 	try:
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		a = request.get_data()
-		dict5 = json.loads(a)
+		dict5 = json.loads(a.decode('utf-8'))
 		User_ID = dict5['id']
 		Comment_Food = dict5['food']
 		Score = dict5['rate']
 		if(Score < 2):
 			Score = 0
 		Comment = dict5['detail']
-		Comment_ID = dict5['CommentId']
+		Comment_ID = dict5['commentId']
 		Return_Tags_List = list()
 
 		#put the info into the table Comment_Info
 		add_comment_cursor = DB_conn.cursor()
-		operation_sentence = "Insert INTO Comment_Info(Comment_ID,Context,User_ID,Score，Food_ID) values(\'%s\',\'%s\',\'%s\',%s,\'%s\')" %(Comment_ID,Comment,User_ID,Score,Comment_Food)
+		operation_sentence = "Insert INTO Comment_Info(Comm_ID,Context,User_ID,Score,Food_ID) values(\'%s\',\'%s\',\'%s\',%s,\'%s\')" %(Comment_ID,Comment,User_ID,Score,Comment_Food)
 		add_comment_cursor.execute(operation_sentence)
 		DB_conn.commit()
 		add_comment_cursor.close()
@@ -209,7 +211,7 @@ def Added_Comment_Annalysic():
 		json_data = {'error':0,'tag':Return_Tags_List}
 		return jsonify(json_data)
 	except Exception as e:
-		json_data = {'error':e}
+		json_data = {'error':str(e)}
 		return jsonify(json_data)
 
 
@@ -218,9 +220,9 @@ def Delete_Comment():
 	try:
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		a = request.get_data()
-		dict7 = json.loads(a)
+		dict7 = json.loads(a.decode('utf-8'))
 		User_ID = dict7['id']
-		Comment_ID = dict7['CommentId']
+		Comment_ID = dict7['commentId']
 		Return_Tags_List = list()
 	
 		#score comment food_id are needed to get in db 
@@ -283,7 +285,10 @@ def Delete_Comment():
 		Pre_Score = Food_Info_Row['Ave_Score'] * Food_Info_Row['times']
 		New_Score = Pre_Score - Score 
 		New_Times = Food_Info_Row['times'] - 1
-		New_Ave_Score = New_Score / New_Times
+		if New_Times == 0:
+			New_Ave_Score = 0
+		else:
+			New_Ave_Score = New_Score / New_Times
 		Change_F_AveS_cursor.execute("Update F_AveS set Ave_Score = %s , times = %s where Food_ID = \'%s\'" %(New_Ave_Score,New_Times,Food_ID))
 		DB_conn.commit()
 		Get_Info_cursor.close() 
@@ -296,7 +301,7 @@ def Delete_Comment():
 		json_data = {'error':0}
 		return jsonify(json_data)
 	except Exception as e:
-		json_data = {'error':e}
+		json_data = {'error':str(e)}
 		return jsonify(json_data)
 
 @app.route('/v1/backend/food/recommend/id',methods = ['POST'])	
@@ -304,7 +309,7 @@ def Return_Recommand_Foods():
 	DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 	DB_conn.close()
 	a = request.get_data()
-	dict6 = json.loads(a)
+	dict6 = json.loads(a.decode('utf-8'))
 	user_id = dict6['id']
 
 

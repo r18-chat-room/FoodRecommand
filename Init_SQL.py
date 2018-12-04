@@ -7,10 +7,11 @@ import json
 
 #初始化三个表格且值均为0：1.用户标签表   2.食物标签表    3.用户食物评分表    
 print("User_Name:")
-user_name = input()
+#user_name = input()
 print("Password:")
-pw = input()
-
+#pw = input()
+user_name = "gd"
+pw = "gd"
 
 
 #标签要从那个接口获取并在此初始化 
@@ -35,7 +36,7 @@ for i in range(len(tag_list)):
 
 ############################################ under is the code needed to be disabled after first usage #############################	
 	
-db = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'user_name'@'localhost' identified by password;
+db = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'gd', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)	#doubts			数据库权限初始化：grant all  on *.* to 'user_name'@'localhost' identified by password;
 
 #1.用户标签表
 
