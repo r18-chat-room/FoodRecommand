@@ -43,9 +43,9 @@ def Receive_new_User():			#获得新注册的用户的信息并添加
 		user_id= dict1['id']
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		cursor = DB_conn.cursor() 
-		sql = "Insert INTO UTs(User_ID) values(%s)" %user_id
+		sql = "Insert INTO UTs(User_ID) values(\'%s\')" %user_id
 		cursor.execute(sql)
-		cursor.execute("Insert INTO User_CT(User_ID) values(%s)" %user_id)
+		cursor.execute("Insert INTO User_CT(User_ID) values(\'%s\')" %user_id)
 		DB_conn.commit() 
 		DB_conn.rollback()
 		cursor.close()
@@ -72,7 +72,7 @@ def Edit_Tag():	#将用户新增加的标签加入到数据库中
 		for tag in tags_list :
 			cursor_2 = DB_conn.cursor() 
 			sql = """
-					update UTs set %s = %s + 1 where User_ID = %s
+					update UTs set %s = %s + 1 where User_ID = \'%s\'
 					"""%(tag,tag,user_id)
 			cursor_2.execute(sql)
 			DB_conn.commit()
@@ -99,7 +99,7 @@ def Favourite_Food():	#将用户新增加的喜爱食物加入到数据库中
 		#将记录加入到用户-喜爱食物表User_FavFood中
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		W_cursor = DB_conn.cursor()
-		W_cursor.execute("Insert INTO User_FavFood(User_ID,Fav_Food) values(%s,%s)" %(user_id,Fav_Food))
+		W_cursor.execute("Insert INTO User_FavFood(User_ID,Fav_Food) values(\'%s\',\'%s\')" %(user_id,Fav_Food))
 		json_data = {'error':0}
 		return jsonify(json_data)
 	except Exception as e:
@@ -121,7 +121,7 @@ def Delete_Fav_Food():
 
 		DB_conn = pymysql.connect(host = 'localhost',user = user_name,password = pw,db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		D_curosr = DB_conn.cursor()
-		D_curosr.execute("delete from User_FavFood where User_ID = %s and Fav_Food = %s" %(user_id,Fav_Food))
+		D_curosr.execute("delete from User_FavFood where User_ID = \'%s\' and Fav_Food = \'%s\'" %(user_id,Fav_Food))
 		D_curosr.close()
 		json_data = {'error':0}
 		return jsonify(json_data)	
@@ -146,14 +146,14 @@ def Added_Comment_Annalysic():
 
 		#put the info into the table Comment_Info
 		add_comment_cursor = DB_conn.cursor()
-		operation_sentence = "Insert INTO Comment_Info(Comment_ID,Context,User_ID,Score，Food_ID) values(%s,%s,%s,%s,%s)" %(Comment_ID,Comment,User_ID,Score,Comment_Food)
+		operation_sentence = "Insert INTO Comment_Info(Comment_ID,Context,User_ID,Score，Food_ID) values(\'%s\',\'%s\',\'%s\',%s,\'%s\')" %(Comment_ID,Comment,User_ID,Score,Comment_Food)
 		add_comment_cursor.execute(operation_sentence)
 		DB_conn.commit()
 		add_comment_cursor.close()
 	
 		#修改用户评论次数表
 		Change_User_CT_cursor = DB_conn.cursor() 
-		Change_User_CT_cursor.execute("update User_CT set Comment_Times = Comment_Times + 1 where User_ID = %s" %User_ID)
+		Change_User_CT_cursor.execute("update User_CT set Comment_Times = Comment_Times + 1 where User_ID = \'%s\'" %User_ID)
 		DB_conn.commit() 
 		Change_User_CT_cursor.close()
 		#提取文本中的标签并加入到数据库里用户的标签向量与食物的标签向量中（标签向量增量要根据其给分而定）
@@ -176,27 +176,27 @@ def Added_Comment_Annalysic():
 				Final_Set_Weight = 0
 			else:
 				Final_Set_Weight = Score * Predict_Score*Similiar_Point * weight
-			Change_FTs_Cursor.execute("select %s from FTs where Food_ID = %s" %(Most_Similiar_Tag,Comment_Food))
+			Change_FTs_Cursor.execute("select %s from FTs where Food_ID = \'%s\'" %(Most_Similiar_Tag,Comment_Food))
 			Pre_FWeight_Dict = Change_FTs_Cursor.fetchone()
 			Pre_FWeight = Pre_FWeight_Dict[Most_Similiar_Tag]
-			Change_FTs_Cursor.execute("Update FTs set %s = %s where Food_ID = %s" %(Most_Similiar_Tag,Pre_FWeight + Final_Set_Weight,Comment_Food))
+			Change_FTs_Cursor.execute("Update FTs set %s = %s where Food_ID = \'%s\'" %(Most_Similiar_Tag,Pre_FWeight + Final_Set_Weight,Comment_Food))
 			DB_conn.commit() 
-			Change_UTs_Cursor.execute("select %s from UTs where User_ID = %s" %(Most_Similiar_Tag,User_ID))
+			Change_UTs_Cursor.execute("select %s from UTs where User_ID = \'%s\'" %(Most_Similiar_Tag,User_ID))
 			Pre_UWeight_Dict = Change_UTs_Cursor.fetchone() 
 			Pre_UWeight = Pre_UWeight_Dict[Most_Similiar_Tag]
-			Change_UTs_Cursor.execute("Update UTs set %s = %s where User_ID = %s" %(Most_Similiar_Tag,Pre_UWeight + Final_Set_Weight, User_ID))
+			Change_UTs_Cursor.execute("Update UTs set %s = %s where User_ID = \'%s\'" %(Most_Similiar_Tag,Pre_UWeight + Final_Set_Weight, User_ID))
 			DB_conn.commit()
 
 		#修改食物平均分表
 		Get_Info_cursor = DB_conn.cursor() 
 		Change_F_AveS_cursor = DB_conn.cursor()
-		Get_Info_cursor.execute("Select * from F_AveS where Food_ID = %s"%Comment_Food)
+		Get_Info_cursor.execute("Select * from F_AveS where Food_ID = \'%s\'"%Comment_Food)
 		Food_Info_Row = Get_Info_cursor.fetchone()
 		Pre_Score = Food_Info_Row['Ave_Score'] * Food_Info_Row['times']
 		New_Score = Pre_Score + Score 
 		New_Times = Food_Info_Row['times'] + 1
 		New_Ave_Score = New_Score / New_Times
-		Change_F_AveS_cursor.execute("Update F_AveS set Ave_Score = %s , times = %s where Food_ID = %s" %(New_Ave_Score,New_Times,Comment_Food))
+		Change_F_AveS_cursor.execute("Update F_AveS set Ave_Score = %s , times = %s where Food_ID = \'%s\'" %(New_Ave_Score,New_Times,Comment_Food))
 		DB_conn.commit()
 		Get_Info_cursor.close() 
 		Change_F_AveS_cursor.close()
@@ -225,7 +225,7 @@ def Delete_Comment():
 	
 		#score comment food_id are needed to get in db 
 		get_comment_info = DB_conn.cursor()
-		get_info_sentence = 'select Context,Score,Food_ID from Comment_Info where Comm_ID = %s'%(Comment_ID)
+		get_info_sentence = 'select Context,Score,Food_ID from Comment_Info where Comm_ID = \'%s\''%(Comment_ID)
 		get_comment_info.execute(get_info_sentence)
 		info = get_comment_info.fetchone()
 		Comment = info['Context']
@@ -235,12 +235,12 @@ def Delete_Comment():
 	
 		#delete the comment_info in table Comment_Info
 		del_comment_cursor = DB_conn.cursor()
-		del_comment_cursor.execute('delete from Comment_Info where Comm_ID = %s'%(Comment_ID))
+		del_comment_cursor.execute('delete from Comment_Info where Comm_ID = \'%s\''%(Comment_ID))
 		DB_conn.commit()
 		del_comment_cursor.close()
 	
 		Change_User_CT_cursor = DB_conn.cursor() 
-		Change_User_CT_cursor.execute("update User_CT set Comment_Times = Comment_Times - 1 where User_ID = %s" %User_ID)
+		Change_User_CT_cursor.execute("update User_CT set Comment_Times = Comment_Times - 1 where User_ID = \'%s\'" %User_ID)
 		DB_conn.commit() 
 		Change_User_CT_cursor.close()
 
@@ -264,34 +264,34 @@ def Delete_Comment():
 				Final_Set_Weight = 0
 			else:
 				Final_Set_Weight = Score/5 * Predict_Score*Similiar_Point * weight
-			Change_FTs_Cursor.execute("select %s from FTs where Food_ID = %s" %(Most_Similiar_Tag,Comment_Food))
+			Change_FTs_Cursor.execute("select %s from FTs where Food_ID = \'%s\'" %(Most_Similiar_Tag,Food_ID))
 			Pre_FWeight_Dict = Change_FTs_Cursor.fetchone()
 			Pre_FWeight = Pre_FWeight_Dict[Most_Similiar_Tag]
-			Change_FTs_Cursor.execute("Update FTs set %s = %s where Food_ID = %s" %(Most_Similiar_Tag,Pre_FWeight - Final_Set_Weight,Comment_Food))
+			Change_FTs_Cursor.execute("Update FTs set %s = %s where Food_ID = \'%s\'" %(Most_Similiar_Tag,Pre_FWeight - Final_Set_Weight,Food_ID))
 			DB_conn.commit() 
-			Change_UTs_Cursor.execute("select %s from UTs where User_ID = %s" %(Most_Similiar_Tag,User_ID))
+			Change_UTs_Cursor.execute("select %s from UTs where User_ID = \'%s\'" %(Most_Similiar_Tag,User_ID))
 			Pre_UWeight_Dict = Change_UTs_Cursor.fetchone() 
 			Pre_UWeight = Pre_UWeight_Dict[Most_Similiar_Tag]
-			Change_UTs_Cursor.execute("Update UTs set %s = %s where User_ID = %s" %(Most_Similiar_Tag,Pre_UWeight - Final_Set_Weight, User_ID))
+			Change_UTs_Cursor.execute("Update UTs set %s = %s where User_ID = \'%s\'" %(Most_Similiar_Tag,Pre_UWeight - Final_Set_Weight, User_ID))
 			DB_conn.commit()
 		
 		#食物平均分表的撤销
 		Get_Info_cursor = DB_conn.cursor() 
 		Change_F_AveS_cursor = DB_conn.cursor()
-		Get_Info_cursor.execute("Select * from F_AveS where Food_ID = %s"%Comment_Food)
+		Get_Info_cursor.execute("Select * from F_AveS where Food_ID = \'%s\'"%Food_ID)
 		Food_Info_Row = Get_Info_cursor.fetchone()
 		Pre_Score = Food_Info_Row['Ave_Score'] * Food_Info_Row['times']
 		New_Score = Pre_Score - Score 
 		New_Times = Food_Info_Row['times'] - 1
 		New_Ave_Score = New_Score / New_Times
-		Change_F_AveS_cursor.execute("Update F_AveS set Ave_Score = %s , times = %s where Food_ID = %s" %(New_Ave_Score,New_Times,Comment_Food))
+		Change_F_AveS_cursor.execute("Update F_AveS set Ave_Score = %s , times = %s where Food_ID = \'%s\'" %(New_Ave_Score,New_Times,Food_ID))
 		DB_conn.commit()
 		Get_Info_cursor.close() 
 		Change_F_AveS_cursor.close()
 		DB_conn.close()
 
 		#还要修改RS中的字典
-		RS.Food_AveScore[Comment_Food]['Times'] = New_Times
+		RS.Food_AveScore[Food_ID]['Times'] = New_Times
 		RS.Food_AveScore['AveScore'] = New_Ave_Score
 		json_data = {'error':0}
 		return jsonify(json_data)

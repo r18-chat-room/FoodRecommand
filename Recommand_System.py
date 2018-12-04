@@ -10,11 +10,15 @@ import pymysql
 
 user_name = Init_SQL.user_name
 pw = Init_SQL.pw
+all_food_id_list = Init_SQL.Food_List
+
+#获取所有的食物ID
+all_user_id_list = [x['user_id'] for x in Init_SQL.all_user_ct]
 
 class RSystem:
 	def __init__(self):
-		self.Food_ID_List  = ['947232','947623']	#在使用前在此处初始化
-		self.User_ID_List = ['13342','34221','15564']	
+		self.Food_ID_List  = []	#在使用前在此处初始化
+		self.User_ID_List = []
 		self.UserCF_Matrix = dict() 
 		self.ItemCF_Matrix = dict()	
 		self.Food_AveScore = dict() 
@@ -51,7 +55,7 @@ class RSystem:
 		#权重增加百分比依据该用户对其有过行为的食物的数量，当该用户吃过更多食物的时候（评分行为越多），该行为对其的影响越小
 		DB_conn = pymysql.connect(host = 'localhost',user  = user_name,password = pw,db ='db', charset = 'utf8mb4', cursorclass = pymysql.cursors.DictCursor)
 		get_food_tags_cursor = DB_conn.cursor()
-		get_food_tags_cursor.execute('select * from FTs where Food_ID = %s' %Fav_Food_ID)
+		get_food_tags_cursor.execute('select * from FTs where Food_ID = \'%s\'' %Fav_Food_ID)
 
 
 		row = get_food_tags_cursor.fetchone()		#这里需要修改 使得其可以提出该食品对应的所有标签向量
@@ -63,7 +67,7 @@ class RSystem:
 		get_food_tags_cursor.close()
 
 		Get_U_CT_cursor = DB_conn.cursor()
-		Get_U_CT_cursor.execute("select Comment_Times from User_CT where User_ID = %s" %user_id)
+		Get_U_CT_cursor.execute("select Comment_Times from User_CT where User_ID = \'%s\'" %user_id)
 		temp_dict = Get_U_CT_cursor.fetchone()
 		if(temp_dict['Comment_Times'] == 0):
 			commmet_time = 1
@@ -72,7 +76,7 @@ class RSystem:
 
 		for tag in fav_tag_list:
 			Up_User_Tags_Weight = DB_conn.cursor()
-			Up_User_Tags_Weight.execute('update UTs set %s  = %s + %s where User_ID = %s' %(tag,tag,1 + math.log(commmet_time/5) ,user_id))		
+			Up_User_Tags_Weight.execute('update UTs set %s  = %s + %s where User_ID = \'%s\'' %(tag,tag,1 + math.log(commmet_time/5) ,user_id))		
 			DB_conn.commit()
 			Up_User_Tags_Weight.close()
 
@@ -84,7 +88,7 @@ class RSystem:
 		get_food_tags_cursor = DB_conn.cursor()
         
 		Unlike_tag_set = set()
-		get_food_tags = 'select * from FTs where Food_ID = %s'  %(Dislike_Food)
+		get_food_tags = 'select * from FTs where Food_ID = \'%s\''  %(Dislike_Food)
 		get_food_tags_cursor.execute(get_food_tags)
 		Dislike_Tags_row = get_food_tags_cursor.fetchone()
         
@@ -96,7 +100,7 @@ class RSystem:
         
 		for down_tag_index in Unlike_tag_set:
 			Down_User_Tags_Weight = DB_conn.cursor()
-			Down_User_Tags_Weight.execute(' update UTs set %s =  %s * 0.8 where User_ID = %s' %(tag,tag,user_id))
+			Down_User_Tags_Weight.execute(' update UTs set %s =  %s * 0.8 where User_ID = \'%s\'' %(tag,tag,user_id))
 			DB_conn.commit()
 			Down_User_Tags_Weight.close()
 		self.User_Fav_Food_List[user_id].remove(Dislike_Food)
@@ -112,7 +116,7 @@ class RSystem:
 			Item_Tags[self.Food_ID_List[i]] = dict() 
 			get_food_tags_cursor = DB_conn.cursor()
 
-			get_food_tags = " select * from FTs where Food_ID = %s" %self.Food_ID_List[i]
+			get_food_tags = " select * from FTs where Food_ID = \'%s\'" %self.Food_ID_List[i]
 			get_food_tags_cursor.execute(get_food_tags)
 			Food_Tags_row = get_food_tags_cursor.fetchone()
     		
@@ -155,7 +159,7 @@ class RSystem:
 			User_Tags[self.User_ID_List[i]] = dict() 
 			get_User_tags_cursor = DB_conn.cursor() 
 
-			get_user_tags = " select * from UTs where User_ID = %s" %self.User_ID_List[i]
+			get_user_tags = " select * from UTs where User_ID = \'%s\'" %self.User_ID_List[i]
 			get_User_tags_cursor.execute(get_user_tags)
 			User_Tags_row = get_User_tags_cursor.fetchone() 
 
@@ -221,12 +225,12 @@ class RSystem:
 			Sim_Items_List.extend(part_Sim_Items_List)
 
 		Sim_Items_Recommand_List = list(set(Sim_Items_List))
-		Sim_Items_List.sort(key = Sim_Items_List.index)
+		Sim_Items_Recommand_List.sort(key = Sim_Items_List.index)
 
 		#然后再根据用户自身edit的标签来推荐 
 		DB_conn = pymysql.connect(host = 'localhost', user = user_name,password = pw, db = 'db', charset = 'utf8mb4',cursorclass = pymysql.cursors.DictCursor)
 		get_User_tags_cursor = DB_conn.cursor() 
-		get_user_tags = " select * from UTs where User_ID = %s" %user_id
+		get_user_tags = " select * from UTs where User_ID = \'%s\'" %user_id
 		get_User_tags_cursor.execute(get_user_tags)
 		User_Tags_row = get_User_tags_cursor.fetchone() 
 		del User_Tags_row['User_ID']
@@ -255,7 +259,7 @@ class RSystem:
 		get_User_tags_cursor.close() 
 
         #下一步先融合二表再进行根据平均分数排列
-		All_Item_Recommend_List = Sim_Items_List + UserCF_Recommand_List + EditedTags_RecommendList
+		All_Item_Recommend_List = Sim_Items_Recommand_List + UserCF_Recommand_List + EditedTags_RecommendList
 		self.Renew_Food_Rank_List()
 		Food_AveScore_Rank_List = list() 
 		for key,value in self.Food_AveScore_List:

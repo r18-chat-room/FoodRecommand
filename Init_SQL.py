@@ -145,12 +145,12 @@ cursor_9.close()
 def insert_into_FTs(info):	#info includes 	[{'food_id':..., 'tags':[{'name':...},...]},{...},]	 
 	Init_FT_cursor = db.cursor()
 	for i in info:
-		sql_action = 'insert into FTs(Food_ID) values(%s)' %i['food_id']
+		sql_action = 'insert into FTs(Food_ID) values(\'%s\')' %i['food_id']
 		Init_FT_cursor.execute(sql_action)
 	db.commit()
 	for i in info:
 		for tag in i['tags']:
-			sql_action = 'update FTs set %s = 3 where Food_ID = %s'%(tag,i['food_id'])
+			sql_action = 'update FTs set %s = 3 where Food_ID = \'%s\''%(tag,i['food_id'])
 			Init_FT_cursor.execute(sql_action)
 	db.commit()
 	Init_FT_cursor.close()
@@ -158,7 +158,7 @@ def insert_into_FTs(info):	#info includes 	[{'food_id':..., 'tags':[{'name':...}
 def insert_into_Comment_Info(info):    #info includes [{'food_id‘:, 'rate':, 'tags':[],'detail':[],'user_id':,}]
 	CI_cursor = db.cursor()
 	for comment in info:
-		sql_action = 'insert into Comment_Info(Comm_ID,Context,User_ID,Score,Food_ID) values(%s,%s,%s,%s,%s)'%(comment['comment_id'],comment['detail'],comment['user_id'],comment['rate'],comment['food_id'])
+		sql_action = 'insert into Comment_Info(Comm_ID,Context,User_ID,Score,Food_ID) values(\'%s\',\'%s\',\'%s\',%s,\'%s\')'%(comment['comment_id'],comment['detail'],comment['user_id'],comment['rate'],comment['food_id'])
 		CI_cursor.execute(sql_action)
 	db.commit()
 	CI_cursor.close()
@@ -166,14 +166,14 @@ def insert_into_Comment_Info(info):    #info includes [{'food_id‘:, 'rate':, '
 def insert_into_F_Aves(info):   #info is [{'food_id':,'rate':,'time':},...]
 	FA_cursor = db.cursor()
 	for fs in info:
-		sql_action = 'insert into F_AveS(Food_ID,Ave_Score,times) values(%s,%s,%s)'%(fs['food_id'],fs['rate'],fs['time'])
+		sql_action = 'insert into F_AveS(Food_ID,Ave_Score,times) values(\'%s\',%s,%s)'%(fs['food_id'],fs['rate'],fs['time'])
 		FA_cursor.execute(sql_action)
 	db.commit()
 	
 def insert_into_User_CT(info):   #info is [{'user_id':,'comm_times':},...]
 	UCT_cursor = db.cursor()
 	for uct in info:
-		sql_action = f"insert into User_CT(User_ID,Comment_Times) values({uct['user_id']},{uct['comm_times']})"
+		sql_action = "insert into User_CT(User_ID,Comment_Times) values(\'%s\',%s)"%(uct['user_id'],uct['comm_times'])
 		UCT_cursor.execute(sql_action)
 	db.commit()
 	UCT_cursor.close()
@@ -181,7 +181,7 @@ def insert_into_User_CT(info):   #info is [{'user_id':,'comm_times':},...]
 def insert_into_UFS_0(info):    #info is [{'user_id':,'food_id':,'rate':}]
 	UFS_cursor = db.cursor()
 	for ufs in info:
-		sql_action = f"insert into UFS_0(User_ID,Food_ID,Score) values({ufs['user_id']},{ufs['food_id']},{ufs['rate']})"
+		sql_action = "insert into UFS_0(User_ID,Food_ID,Score) values(\'%s\',\'%s\',%s)"%(ufs['user_id'],ufs['food_id'],ufs['rate'])
 		UFS_cursor.execute(sql_action)
 	db.commit()
 	UFS_cursor.close()
