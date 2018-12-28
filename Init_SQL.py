@@ -202,7 +202,13 @@ for food_info in all_food_info:
 			all_user_ct.append({'user_id':comment['userId'],'comm_times':1})
 		else:
 			if comment['userId'] in [x['user_id'] for x in all_user_ct]:
-				all_user_ct[comment['userId']]['comm_times'] += 1
+				'''
+				updated Friday noon 
+				for x in all_user_ct:
+					if x['user_id'] == comment['userId']:
+						x['comm_times'] += 1
+						break
+				'''
 			else:
 				all_user_ct.append({'user_id':comment['userId'],'comm_times':1})
 		
